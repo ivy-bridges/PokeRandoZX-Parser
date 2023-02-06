@@ -12,7 +12,15 @@ import LogParser
 
 main :: IO ()
 main = do
-    putStrLn "unfinished"
+    putStrLn "Please enter the name of the log file."
+    
+    inputFile <- getLine
+    logText   <- readFile inputFile
+    
+    putStrLn "After choosing a Pokemon, type any of the following to display the relevant info."
+    putStrLn "\tStats\n\tTypes\n\tMoves\n\tAbilities\n\tMachines\n\tTutors"
+    putStrLn "Or type Quit, Close, or Back to exit and choose another Pokemon."
+    infoLoop logText
     
 -- asks for an item and cuts down the list until a small number are left to choose. it. works right now.
 -- TODO: Rewrite this to not use a bunch of else-ifs lol (something at the level of pokeLoop would be nice)
@@ -27,13 +35,14 @@ chooseItem options chooseFunction = do
     else if length left == 1 then do
         return (head left)
     else if length left < 10 then do
+        putStrLn "Enter the corresponding number of your selection:"
         zipWithM_ (\e i -> putStrLn(show i ++ ". " ++ show e)) left [1..(length left)]
         index <- getChar
         getLine
         if (isDigit index && (digitToInt index < (length left + 1))) then do
             return (left !! ((digitToInt index - 1)))
         else do
-            chooseItem left chooseFunction
+            chooseItem options chooseFunction
     else do
         putStrLn "This did not filter enough elements."
         chooseItem options chooseFunction
@@ -44,7 +53,7 @@ infoLoop :: String -> IO ()
 infoLoop logText = do
     let pokeNames = getPokemon logText
     
-    putStrLn "choose a pokemon"
+    putStrLn "Enter the name of a Pokemon:"
     
     item <- chooseItem pokeNames (isPrefixOf . titleCase)
     putStrLn $ "Showing info on [" ++ (upperCase item) ++ "]"
@@ -58,10 +67,10 @@ pokeLoop logStr pokemon = do
                    ("MOVES",     getLevelUpMoves logStr pokemon),  
                    ("ABILITIES", getAbilities    logStr pokemon),  
                    ("MACHINES",  getMachines     logStr pokemon),
-                   ("TUTOR",     getTutorMoves   logStr pokemon)]
+                   ("TUTORS",    getTutorMoves   logStr pokemon)]
     input <- getLine
     
-    let isQuitting = elem (upperCase input) ["Q","C","QUIT","CLOSE","BACK"]
+    let isQuitting = elem (upperCase input) ["Q","C", "B", "QUIT","CLOSE","BACK"]
     unless isQuitting (do -- requests for data loop back after displaying
         let match   = find  (isPrefixOf (upperCase input) . fst) options -- get the first pair where the input prefixes the string 
             result  = liftM (show . snd) match -- representation of the data (or Nothing on an invalid match)
